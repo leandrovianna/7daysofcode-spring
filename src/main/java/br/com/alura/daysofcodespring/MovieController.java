@@ -15,6 +15,9 @@ public class MovieController {
     @GetMapping("/top250")
     public String getTop250Movies() {
         String apiKey = System.getenv("IMDB_API_KEY");
+        if (apiKey == null)
+            throw new RuntimeException("IMDB_API_KEY is not defined");
+
         String url = "https://imdb-api.com/API/Top250Movies/" + apiKey;
 
         ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
