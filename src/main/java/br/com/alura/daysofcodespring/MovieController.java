@@ -1,13 +1,11 @@
 package br.com.alura.daysofcodespring;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
-import java.io.StringWriter;
+import java.io.PrintWriter;
 import java.io.Writer;
 import java.util.List;
 
@@ -15,28 +13,21 @@ import java.util.List;
 public class MovieController {
 
     @Autowired
-    private RestTemplate restTemplate;
+    private ImdbApiClient imdbApiClient;
 
     @GetMapping("/top250")
-    public String getTop250Movies() {
-        String apiKey = System.getenv("IMDB_API_KEY");
-        if (apiKey == null)
-            throw new RuntimeException("IMDB_API_KEY is not defined");
+    public ListOfMovies getTop250Movies() {
+        ListOfMovies movies = imdbApiClient.getBody();
 
-        String url = "https://imdb-api.com/API/Top250Movies/" + apiKey;
-
-        ResponseEntity<ListOfMovies> response = restTemplate.getForEntity(url, ListOfMovies.class);
-
-        Writer writer = new StringWriter();
-        HTMLGenerator generator = new HTMLGenerator(writer);
         try {
-            generator.generate(response.getBody().items());
+            Writer writer = new PrintWriter("src/main/resources/content.html");
+            new HTMLGenerator(writer).generate(movies.items);
+            writer.close();
         } catch (IOException e) {
             e.printStackTrace();
-            return "";
         }
 
-        return writer.toString();
+        return movies;
     }
 
     record ListOfMovies(List<Movie> items, String errorMessage) {}
