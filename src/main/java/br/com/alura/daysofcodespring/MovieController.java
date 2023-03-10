@@ -6,6 +6,11 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
+import java.io.IOException;
+import java.io.StringWriter;
+import java.io.Writer;
+import java.util.List;
+
 @RestController
 public class MovieController {
 
@@ -20,7 +25,19 @@ public class MovieController {
 
         String url = "https://imdb-api.com/API/Top250Movies/" + apiKey;
 
-        ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
-        return response.getBody();
+        ResponseEntity<ListOfMovies> response = restTemplate.getForEntity(url, ListOfMovies.class);
+
+        Writer writer = new StringWriter();
+        HTMLGenerator generator = new HTMLGenerator(writer);
+        try {
+            generator.generate(response.getBody().items());
+        } catch (IOException e) {
+            e.printStackTrace();
+            return "";
+        }
+
+        return writer.toString();
     }
+
+    record ListOfMovies(List<Movie> items, String errorMessage) {}
 }
