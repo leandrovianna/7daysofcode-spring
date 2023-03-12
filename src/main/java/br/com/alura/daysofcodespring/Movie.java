@@ -1,3 +1,3 @@
 package br.com.alura.daysofcodespring;
 
-public record Movie(String title, String image, double imDbRating, int year) {}
+public record Movie(String id, String title, String image, double imDbRating, int year) {}

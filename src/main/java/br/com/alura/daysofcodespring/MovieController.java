@@ -1,15 +1,15 @@
 package br.com.alura.daysofcodespring;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Writer;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @RestController
 public class MovieController {
@@ -18,9 +18,10 @@ public class MovieController {
     private ImdbApiClient imdbApiClient;
 
     private List<Movie> movies;
+    private final Set<Movie> favorites = new HashSet<>();
 
     @GetMapping("/top250")
-    public List<Movie> getTop250Movies(@RequestParam Optional<String> title) {
+    public ListOfMovies getTop250Movies(@RequestParam Optional<String> title) {
         if (movies == null) {
             ListOfMovies response = imdbApiClient.getBody();
             movies = response.items;
@@ -38,7 +39,23 @@ public class MovieController {
             e.printStackTrace();
         }
 
-        return filteredMovies;
+        return new ListOfMovies(filteredMovies, "");
+    }
+
+    @PostMapping("/favorite/{id}")
+    public ListOfMovies addFavoriteMovie(@PathVariable String id) {
+        if (movies != null) {
+            movies.stream()
+                    .filter(m -> m.id().equals(id))
+                    .forEach(m -> favorites.add(m));
+        }
+
+        return new ListOfMovies(favorites.stream().toList(), "");
+    }
+
+    @GetMapping("/favorite")
+    public ListOfMovies listFavorites() {
+        return new ListOfMovies(favorites.stream().toList(), "");
     }
 
     record ListOfMovies(List<Movie> items, String errorMessage) {}
